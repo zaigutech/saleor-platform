@@ -1,0 +1,43 @@
+# 开发环境专用配置（仅本地生效）。
+#
+# 开发：`docker compose up` 会自动合并本文件（docker-compose.yml + docker-compose.override.yml）。
+# 生产：必须使用 `docker compose -f docker-compose.yml up` 显式指定文件，
+#       带 -f 时 Compose 不会自动加载本文件，确保生产不受影响。
+services:
+  api:
+    environment:
+      # 仅开发环境关闭 Saleor 的出站 IP 过滤，
+      # 使其可以访问私有 docker 网络中的 dummy-payment-app
+      # （manifest 拉取 + 同步 webhook）。生产值为 True。
+      HTTP_IP_FILTER_ENABLED: "False"
+
+  worker:
+    environment:
+      HTTP_IP_FILTER_ENABLED: "False"
+
+  dummy-payment-app:
+    image: python:3.12-alpine
+    command: python /app/server.py
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      DUMMY_PAYMENT_APP_ID: saleor.io.dummy-payment-app
+      DUMMY_PAYMENT_APP_NAME: Dummy Payment App
+      DUMMY_PAYMENT_APP_PUBLIC_URL: http://dummy-payment-app.local:3000
+    networks:
+      default:
+        aliases:
+          # Django's URLValidator rejects single-label hostnames, so the
+          # manifestUrl / tokenTargetUrl need a dotted name.
+          - dummy-payment-app.local
+    volumes:
+      - ./dummy-payment-app/server.py:/app/server.py:ro
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request as u; u.urlopen('http://127.0.0.1:3000/healthz')
+      interval: 15s
+      timeout: 5s
+      retries: 3
