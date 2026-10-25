@@ -80,6 +80,10 @@ mutation CreateNonShippingProductTypes {
 }
 ```
 
-## 6. 接入 EOS
+## 6. 配置 OpenID Connect
+
+见 [配置 OpenID Connect 插件](oidc-setup.md)。
+
+## 7. 接入 EOS
 
 见 [EOS 接入初始化](eos-setup.md)。
