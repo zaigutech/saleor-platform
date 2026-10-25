@@ -52,24 +52,34 @@ mutation InstallDummyPaymentApp {
 }
 ```
 
-安装由 worker 异步完成。几秒后确认：
-
-```graphql
-query DummyPaymentAppStatus {
-  apps(first: 20) { edges { node { identifier name isActive } } }
-  appsInstallations { appName status message }
-}
-```
-
-`apps` 里出现 `saleor.io.dummy-payment-app` 且 `isActive: true` 才算成功；`appsInstallations` 里有
-`FAILED` 时看 `message`。
-
-> **生产环境**（只需执行一次）：
+> **生产环境**：
 >
 > - 不装 dummy-payment-app（生产不加载 `docker-compose.override.yml`，它不会启动），改装真实支付 App。
 > - 必须带上 `docker-compose.prod.yml`：它加载 `settings_fork.py` 去掉旧 Dummy 插件，漏掉的话旧 Dummy
 >   会在每个渠道默认启用，顾客不付钱就能下单并标记为已支付。
 
-## 5. 接入 EOS
+## 5. 创建商品类型
+
+创建两个不需要配送的商品类型 `Non Shippable` 和 `Service`（`isShippingRequired: false`，结账时不要求收货地址和配送方式）。
+在 Playground 里执行：
+
+```graphql
+mutation CreateNonShippingProductTypes {
+  nonShippable: productTypeCreate(
+    input: { name: "Non Shippable", kind: NORMAL, isShippingRequired: false }
+  ) {
+    productType { id name slug isShippingRequired }
+    errors { field code message }
+  }
+  service: productTypeCreate(
+    input: { name: "Service", kind: NORMAL, isShippingRequired: false }
+  ) {
+    productType { id name slug isShippingRequired }
+    errors { field code message }
+  }
+}
+```
+
+## 6. 接入 EOS
 
 见 [EOS 接入初始化](eos-setup.md)。
