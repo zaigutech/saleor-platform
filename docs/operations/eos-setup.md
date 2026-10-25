@@ -1,6 +1,6 @@
 # EOS 接入初始化
 
-前提：已按 [部署](deploy.md) 完成第 1～3 步。
+前提：已按 [部署](deploy.md) 完成第 1～4 步。
 
 用超级管理员登录 Dashboard，在 Playground 里执行。
 

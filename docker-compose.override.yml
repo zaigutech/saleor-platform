@@ -1,8 +1,9 @@
 # 开发环境专用配置（仅本地生效）。
 #
 # 开发：`docker compose up` 会自动合并本文件（docker-compose.yml + docker-compose.override.yml）。
-# 生产：必须使用 `docker compose -f docker-compose.yml up` 显式指定文件，
+# 生产：必须使用 `docker compose -f docker-compose.yml -f docker-compose.prod.yml up` 显式指定文件，
 #       带 -f 时 Compose 不会自动加载本文件，确保生产不受影响。
+# DJANGO_SETTINGS_MODULE 和 settings_fork.py 挂载在 docker-compose.prod.yml 里有同样一份，改动时两边同步。
 services:
   api:
     environment:
@@ -10,10 +11,16 @@ services:
       # 使其可以访问私有 docker 网络中的 dummy-payment-app
       # （manifest 拉取 + 同步 webhook）。生产值为 True。
       HTTP_IP_FILTER_ENABLED: "False"
+      DJANGO_SETTINGS_MODULE: saleor.settings_fork
+    volumes:
+      - ./saleor-settings/settings_fork.py:/app/saleor/settings_fork.py:ro
 
   worker:
     environment:
       HTTP_IP_FILTER_ENABLED: "False"
+      DJANGO_SETTINGS_MODULE: saleor.settings_fork
+    volumes:
+      - ./saleor-settings/settings_fork.py:/app/saleor/settings_fork.py:ro
 
   dummy-payment-app:
     image: python:3.12-alpine
