@@ -22,7 +22,7 @@ docker compose up
 - Dashboard：http://localhost:9000/ ，用 `129082@qq.com` / `admin` 登录
 - API：http://localhost:8000/graphql/
 
-> **生产环境**（只需执行一次）：
+> **生产环境**：
 >
 > - 所有 `docker compose` 命令都加 `-f docker-compose.yml -f docker-compose.prod.yml`（如
 >   `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`），不加载开发专用的

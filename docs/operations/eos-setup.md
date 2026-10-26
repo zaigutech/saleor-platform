@@ -45,7 +45,7 @@ mutation CreateEosApp {
   "appId": "QXBwOjI=",
   "targetUrl": "http://172.20.0.1:8080/api/webhooks/saleor/order",
   "secretKey": "change-me",
-  "query": "subscription { event { __typename ... on OrderCreated { order { ...EosOrder } } ... on OrderPaid { order { ...EosOrder } } } } fragment EosOrder on Order { id created channel { id } user { id } userEmail lines { variant { sku } quantity unitPrice { gross { amount currency } } } total { gross { amount currency } } payments { id pspReference } transactions { id pspReference } }"
+  "query": "subscription { event { __typename ... on OrderPaid { order { ...EosOrder } } } } fragment EosOrder on Order { id created channel { id } user { id } userEmail lines { variant { sku } quantity unitPrice { gross { amount currency } } } total { gross { amount currency } } payments { id pspReference } transactions { id pspReference } }"
 }
 ```
 
@@ -76,7 +76,7 @@ mutation CreateEosOrderWebhook(
       targetUrl: $targetUrl
       secretKey: $secretKey
       isActive: true
-      asyncEvents: [ORDER_CREATED, ORDER_PAID]
+      asyncEvents: [ORDER_PAID]
       query: $query
     }
   ) {
