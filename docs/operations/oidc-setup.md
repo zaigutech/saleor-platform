@@ -9,7 +9,7 @@ mutation ConfigureOpenIdConnect {
     input: {
       active: true
       configuration: [
-        { name: "client_id", value: "eos-storefront" }
+        { name: "client_id", value: "storefront" }
         { name: "client_secret", value: "unused" }
         { name: "json_web_key_set_url", value: "http://172.17.0.1:8081/realms/eos/protocol/openid-connect/certs" }
         { name: "user_info_url", value: "http://172.17.0.1:8081/realms/eos/protocol/openid-connect/userinfo" }
@@ -36,8 +36,8 @@ mutation ConfigureOpenIdConnect {
 
 | 参数 | 含义 |
 |---|---|
-| `client_id` | Keycloak 里的 client，固定 `eos-storefront` |
-| `client_secret` | 填 `unused`。`oauth_*_url` 为空时 Saleor 只校验 token，不会使用它，填值只为通过启用插件时的非空检查。以后若填了 `oauth_*_url`，必须换成 Keycloak 里 `eos-storefront` → Credentials 的真实 secret |
+| `client_id` | Keycloak 里的 client，固定 `storefront` |
+| `client_secret` | 填 `unused`。`oauth_*_url` 为空时 Saleor 只校验 token，不会使用它，填值只为通过启用插件时的非空检查。以后若填了 `oauth_*_url`，必须换成 Keycloak 里 `storefront` → Credentials 的真实 secret |
 | `json_web_key_set_url` | Keycloak 公钥地址，Saleor 用它校验 token 签名。本地是 docker 网关 `172.17.0.1` 上的 Keycloak 8081 端口 |
 | `user_info_url` | Keycloak userinfo 地址，Saleor 用它取用户信息 |
 | `use_oauth_scope_permissions` | `false`：不按 token 的 scope 授予 Saleor 后台权限 |
