@@ -13,6 +13,7 @@ mutation CreateEosApp {
         MANAGE_ORDERS
         MANAGE_PRODUCTS
         MANAGE_USERS
+        MANAGE_STAFF
         MANAGE_CHECKOUTS
         MANAGE_CHANNELS
       ]
@@ -32,6 +33,8 @@ mutation CreateEosApp {
 ```
 
 返回里 `errors` 为空才算成功。
+
+`MANAGE_STAFF` 让 EOS 找到在商城购物的员工账户（如超级管理员）；Saleor 只对它显示员工。
 
 - `authToken`：**只在这次返回里出现一次**，之后查不到，立刻交给 EOS 配置。
 - `app.id`：`QXBwOjI=`复制下来，第 2 步的 `appId` 就填它。
