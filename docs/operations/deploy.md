@@ -9,7 +9,7 @@ docker compose run --rm api python3 manage.py migrate
 ## 2. 创建超级管理员
 
 ```bash
-docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin api python3 manage.py createsuperuser --noinput --email 129082@qq.com
+docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin api python3 manage.py createsuperuser --noinput --email admin@example.com
 
 ```
 
@@ -19,7 +19,7 @@ docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin api python3 manage.py
 docker compose up
 ```
 
-- Dashboard：http://localhost:9000/ ，用 `129082@qq.com` / `admin` 登录
+- Dashboard：http://localhost:9000/ ，配置 OpenID Connect 之前先用 `admin@example.com` / `admin` 登录
 - API：http://localhost:8000/graphql/
 
 > **生产环境**：
@@ -27,7 +27,9 @@ docker compose up
 > - 所有 `docker compose` 命令都加 `-f docker-compose.yml -f docker-compose.prod.yml`（如
 >   `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`），不加载开发专用的
 >   `docker-compose.override.yml`。
-> - `--email` 换成真实管理员邮箱，`DJANGO_SUPERUSER_PASSWORD` 换成强密码。
+> - `--email` 用平台超级管理员的邮箱，即 middleware `provision-eos.sh` 的 `EOS_ADMIN_USERNAME`；
+>   `DJANGO_SUPERUSER_PASSWORD` 只在配置 OpenID Connect 之前用，换成强密码。配置之后它经 Keycloak 登录，见
+>   [配置 OpenID Connect 插件](oidc-setup.md)。
 
 ## 4. 配置支付
 
