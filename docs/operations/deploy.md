@@ -89,3 +89,28 @@ mutation CreateNonShippingProductTypes {
 ## 7. 接入 EOS
 
 见 [EOS 接入初始化](eos-setup.md)。
+
+## 8. 接入 storefront
+
+不需要配送的结账（第 5 步的商品类型）不收地址，storefront 用渠道的默认国家生成账单地址。`channel.defaultCountry`
+只对 App 和员工可见，所以 storefront 需要一个 App 令牌；没有它，这类订单会报“无法为此订单确定账单国家”。
+
+App 不需要任何权限。在 Playground 里执行：
+
+```graphql
+mutation CreateStorefrontApp {
+  appCreate(input: { name: "Storefront" }) {
+    authToken
+    app { id name isActive }
+    errors { field code message }
+  }
+}
+```
+
+`authToken` **只在这次返回里出现一次**。写进 storefront 仓库的 `.env.local`，然后重启 storefront：
+
+```
+SALEOR_APP_TOKEN=<authToken>
+```
+
+> **生产环境**：`SALEOR_APP_TOKEN` 配在 storefront 的部署环境变量里。
