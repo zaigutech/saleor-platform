@@ -47,8 +47,7 @@ mutation CreateEosApp {
 {
   "appId": "QXBwOjI=",
   "targetUrl": "http://172.20.0.1:8080/api/webhooks/saleor/order",
-  "secretKey": "change-me",
-  "query": "subscription { event { __typename ... on OrderPaid { order { ...EosOrder } } } } fragment EosOrder on Order { id created channel { id } user { id } lines { variant { sku } quantity unitPrice { net { amount currency } } } total { gross { amount currency } } payments { id pspReference } transactions { id pspReference } }"
+  "query": "subscription { event { __typename ... on OrderPaid { order { ...EosOrder } } } } fragment EosOrder on Order { id created channel { id } user { id } lines { variant { sku } quantity unitPrice { net { amount currency } } } total { gross { amount currency } } transactions { id pspReference } }"
 }
 ```
 
@@ -56,20 +55,19 @@ mutation CreateEosApp {
 |---|---|
 | `appId` | 第 1 步返回的 `app.id`，每次创建都不同 |
 | `targetUrl` | 从 Saleor api/worker 容器访问 EOS 的地址。本地是 `zaigu_network` 网关 `172.20.0.1` 上的 EOS 8080 端口 |
-| `secretKey` | 必须和 EOS 的 `SALEOR_WEBHOOK_SECRET` 一致 |
 | `query` | EOS 收到的 payload 契约（subscription），见下方说明 |
 
-> **生产环境**（只需执行一次）改这两项：
->
-> - `targetUrl`：换成 EOS 对外域名，如 `https://<EOS 域名>/api/webhooks/saleor/order`。生产
->   `HTTP_IP_FILTER_ENABLED=True`，Saleor 会拒绝向私网地址发请求，不能用 `172.20.0.1`。
-> - `secretKey`：换成生产 EOS 的 `SALEOR_WEBHOOK_SECRET`。
+不设 `secretKey`：Saleor 用自己的私钥给每个 payload 签 JWS（`Saleor-Signature` 头），EOS 用 Saleor 在
+`/.well-known/jwks.json` 公布的公钥校验。
+
+> **生产环境**（只需执行一次）：`targetUrl` 换成 EOS 对外域名，如
+> `https://<EOS 域名>/api/webhooks/saleor/order`。生产 `HTTP_IP_FILTER_ENABLED=True`，Saleor 会拒绝向私网地址发请求，
+> 不能用 `172.20.0.1`。
 
 ```graphql
 mutation CreateEosOrderWebhook(
   $appId: ID!
   $targetUrl: String!
-  $secretKey: String!
   $query: String!
 ) {
   webhookCreate(
@@ -77,7 +75,6 @@ mutation CreateEosOrderWebhook(
       name: "EOS order sync"
       app: $appId
       targetUrl: $targetUrl
-      secretKey: $secretKey
       isActive: true
       asyncEvents: [ORDER_PAID]
       query: $query
