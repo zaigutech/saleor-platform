@@ -1,8 +1,8 @@
 # 配置 OpenID Connect 插件
 
 让 Saleor 认 Keycloak（realm `eos`）签发的 token，并让 Dashboard 经 Keycloak 登录：整个平台的超级管理员是
-Keycloak 里的同一个用户，用同一套邮箱和密码登录 EOS、Saleor Dashboard 和 Odoo。Keycloak 的 client 由 middleware
-的 `keycloak/provision-eos.sh` 创建。用超级管理员登录 Dashboard，在 Playground 里执行：
+Keycloak 里的同一个用户，用同一套邮箱和密码登录 EOS、Saleor Dashboard 和 Odoo。Keycloak 的 client 由 keycloak
+仓库的 `provision-eos.sh` 创建。用超级管理员登录 Dashboard，在 Playground 里执行：
 
 ```graphql
 mutation ConfigureOpenIdConnect {
@@ -52,7 +52,7 @@ mutation ConfigureOpenIdConnect {
 
 超级管理员首次经 Keycloak 登录时，Saleor 按邮箱认领用 `createsuperuser` 建的同邮箱超级管理员（见
 [部署流程](deploy.md#2-创建超级管理员)），把它绑定到 Keycloak 用户并作废它在 Saleor 里的本地密码，此后只能经
-Keycloak 登录。`saleor:*` scope 由 middleware 的 `provision-eos.sh` 建在 `saleor-dashboard` client 上，只授予持有
+Keycloak 登录。`saleor:*` scope 由 keycloak 仓库的 `provision-eos.sh` 建在 `saleor-dashboard` client 上，只授予持有
 realm 角色 `saleor-admin` 的用户，即超级管理员；其他 Keycloak 用户经 SSO 登录只会得到无后台权限的普通账号。
 `audience` 不配：storefront 送来的 Keycloak token 不带 `saleor:*` scope，也就不会被当作 staff。
 
