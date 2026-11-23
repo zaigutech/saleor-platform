@@ -63,7 +63,7 @@ Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.
 - 创建不需要配送的商品类型 `Non Shippable` 和 `Service`，结账时不要求收货地址和配送方式；
 - 配置 OpenID Connect 插件，见 [配置 OpenID Connect 插件](oidc-setup.md)；
 - 创建 EOS App 和它的订单 webhook，见 [EOS 接入](eos-setup.md)，令牌写进 `../eos/.env` 的 `EOS_SALEOR_APPTOKEN`；
-- 创建 Storefront App，令牌写进 `../storefront/.env` 的 `SALEOR_APP_TOKEN`。不需要配送的结账不收地址，storefront
+- 创建 Storefront App，令牌写进 `../storefront/.env` 的 `SALEOR_APP_TOKEN`（storefront 只在本地开发中作为 eweb 商城的参考运行，不部署）。不需要配送的结账不收地址，storefront
   用渠道的默认国家生成账单地址，而 `channel.defaultCountry` 只对 App 和员工可见；没有这个令牌，这类订单会报“无法为此订单确定账单国家”。
 
 前两步需要的权限 EOS App 没有，由临时的 `EOS provisioning` App 执行，执行完就停用。令牌只在创建时出现一次，目标文件不存在时
@@ -74,4 +74,4 @@ Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.
 > - `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
 > - `KEYCLOAK_PUBLIC_URL` 和 `KEYCLOAK_URL_FOR_SALEOR` 都设为 Keycloak 对外地址，如 `https://<Keycloak 域名>`
 > - `EOS_ORDER_WEBHOOK_URL` 设为 `https://<EOS 域名>/api/webhooks/saleor/order`
-> - 打印出来的两个令牌分别配在 EOS（`EOS_SALEOR_APPTOKEN`）和 storefront（`SALEOR_APP_TOKEN`）的部署环境变量里
+> - 打印出来的 EOS App 令牌配在 EOS 的部署环境变量 `EOS_SALEOR_APPTOKEN` 里；Storefront App 的令牌在生产用不上
