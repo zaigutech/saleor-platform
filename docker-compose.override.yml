@@ -14,6 +14,16 @@ services:
       DJANGO_SETTINGS_MODULE: saleor.settings_fork
     volumes:
       - ./saleor-settings/settings_fork.py:/app/saleor/settings_fork.py:ro
+    # 让 eos 的 dev-env 等 API 能响应后再执行 provision-eos.sh。
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health/')
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   worker:
     environment:
