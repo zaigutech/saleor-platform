@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Saleor provisioning for EOS: the non-shippable product types, the OpenID Connect plugin, the EOS App with its order
-# webhook and the storefront App. Run once, against a fresh Saleor with its services up; a second run creates them
-# all again. Deployment: docs/operations/deploy.md.
+# Saleor provisioning for EOS: the non-shippable product types, the OpenID Connect plugin and the EOS App with its order
+# webhook, plus the Storefront App when STOREFRONT_ENV_FILE is set; only eos's dev-env sets it, since the storefront
+# runs only in local development, as a reference for eweb's shop. Run once, against a fresh Saleor with its services
+# up; a second run creates them all again. Deployment: docs/operations/deploy.md.
 # Needs SALEOR_DASHBOARD_CLIENT_SECRET, which the keycloak repository's provision-eos.sh writes into .env; the
 # environment overrides .env. In production also set COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml.
 set -euo pipefail
@@ -22,7 +23,7 @@ KEYCLOAK_REALM="${KEYCLOAK_REALM:-eos}"
 EOS_ORDER_WEBHOOK_URL="${EOS_ORDER_WEBHOOK_URL:-http://172.20.0.1:8080/api/webhooks/saleor/order}"
 # The .env files of sibling checkouts that receive the App tokens; a missing file gets the token printed.
 EOS_ENV_FILE="${EOS_ENV_FILE:-../eos/.env}"
-STOREFRONT_ENV_FILE="${STOREFRONT_ENV_FILE:-../storefront/.env}"
+STOREFRONT_ENV_FILE="${STOREFRONT_ENV_FILE:-}"
 PROVISIONING_APP="EOS provisioning"
 
 manage() { docker compose exec -T api python3 manage.py "$@"; }
@@ -76,10 +77,12 @@ graphql "$EOS_TOKEN" eos-order-webhook.graphql --arg targetUrl "$EOS_ORDER_WEBHO
   --rawfile query graphql/eos-order-payload.graphql
 hand_over "$EOS_ENV_FILE" EOS_SALEOR_APPTOKEN "$EOS_TOKEN" "EOS App token"
 
-echo "==> Creating the Storefront App"
-# Needs no permission: channel.defaultCountry, from which the storefront bills checkouts that skip the address, is
-# visible only to Apps and staff.
-STOREFRONT_TOKEN=$(create_app Storefront)
-hand_over "$STOREFRONT_ENV_FILE" SALEOR_APP_TOKEN "$STOREFRONT_TOKEN" "Storefront App token"
+if [ -n "$STOREFRONT_ENV_FILE" ]; then
+  echo "==> Creating the Storefront App"
+  # Needs no permission: channel.defaultCountry, from which the storefront bills checkouts that skip the address, is
+  # visible only to Apps and staff.
+  STOREFRONT_TOKEN=$(create_app Storefront)
+  hand_over "$STOREFRONT_ENV_FILE" SALEOR_APP_TOKEN "$STOREFRONT_TOKEN" "Storefront App token"
+fi
 
-echo "==> Done. Restart EOS and the storefront to use the new tokens."
+echo "==> Done. Restart EOS${STOREFRONT_ENV_FILE:+ and the storefront} to use the new tokens."

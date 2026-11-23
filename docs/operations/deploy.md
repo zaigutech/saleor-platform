@@ -63,15 +63,15 @@ Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.
 - 创建不需要配送的商品类型 `Non Shippable` 和 `Service`，结账时不要求收货地址和配送方式；
 - 配置 OpenID Connect 插件，见 [配置 OpenID Connect 插件](oidc-setup.md)；
 - 创建 EOS App 和它的订单 webhook，见 [EOS 接入](eos-setup.md)，令牌写进 `../eos/.env` 的 `EOS_SALEOR_APPTOKEN`；
-- 创建 Storefront App，令牌写进 `../storefront/.env` 的 `SALEOR_APP_TOKEN`（storefront 只在本地开发中作为 eweb 商城的参考运行，不部署）。不需要配送的结账不收地址，storefront
+- 设了 `STOREFRONT_ENV_FILE` 时创建 Storefront App，令牌写进那个文件的 `SALEOR_APP_TOKEN`。storefront 只在本地开发中作为 eweb 商城的参考运行，不部署，只有 eos 的 dev-env 会设它。不需要配送的结账不收地址，storefront
   用渠道的默认国家生成账单地址，而 `channel.defaultCountry` 只对 App 和员工可见；没有这个令牌，这类订单会报“无法为此订单确定账单国家”。
 
 前两步需要的权限 EOS App 没有，由临时的 `EOS provisioning` App 执行，执行完就停用。令牌只在创建时出现一次，目标文件不存在时
-打印出来。执行完重启 EOS 和 storefront。只在全新的 Saleor 上执行一次：再执行会把这些都再建一遍。
+打印出来。执行完重启 EOS（本地还有 storefront）。只在全新的 Saleor 上执行一次：再执行会把这些都再建一遍。
 
 > **生产环境**（只需执行一次）：生产开启了出站 IP 过滤（`HTTP_IP_FILTER_ENABLED`），Saleor 不能访问内网地址，所以用环境变量覆盖默认值：
 >
 > - `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
 > - `KEYCLOAK_PUBLIC_URL` 和 `KEYCLOAK_URL_FOR_SALEOR` 都设为 Keycloak 对外地址，如 `https://<Keycloak 域名>`
 > - `EOS_ORDER_WEBHOOK_URL` 设为 `https://<EOS 域名>/api/webhooks/saleor/order`
-> - 打印出来的 EOS App 令牌配在 EOS 的部署环境变量 `EOS_SALEOR_APPTOKEN` 里；Storefront App 的令牌在生产用不上
+> - 打印出来的 EOS App 令牌配在 EOS 的部署环境变量 `EOS_SALEOR_APPTOKEN` 里；生产不设 `STOREFRONT_ENV_FILE`，不创建 Storefront App
