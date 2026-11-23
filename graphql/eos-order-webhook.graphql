@@ -1,0 +1,15 @@
+# EOS's order webhook. Sent with the EOS App's own token, so the webhook belongs to that App. $query is
+# eos-order-payload.graphql. Parameters: docs/operations/eos-setup.md.
+mutation CreateEosOrderWebhook($targetUrl: String!, $query: String!) {
+  webhookCreate(
+    input: {
+      name: "EOS order sync"
+      targetUrl: $targetUrl
+      isActive: true
+      asyncEvents: [ORDER_PAID]
+      query: $query
+    }
+  ) {
+    errors { field code message }
+  }
+}

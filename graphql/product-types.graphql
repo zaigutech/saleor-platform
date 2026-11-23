@@ -1,0 +1,14 @@
+# Product types whose checkouts ask for no shipping address or method. EOS expects them right after Saleor's
+# "Default Type": ProductType:2 and ProductType:3 (EOS's eos.saleor.product-type-* settings).
+mutation CreateNonShippingProductTypes {
+  nonShippable: productTypeCreate(
+    input: { name: "Non Shippable", kind: NORMAL, isShippingRequired: false }
+  ) {
+    errors { field code message }
+  }
+  service: productTypeCreate(
+    input: { name: "Service", kind: NORMAL, isShippingRequired: false }
+  ) {
+    errors { field code message }
+  }
+}

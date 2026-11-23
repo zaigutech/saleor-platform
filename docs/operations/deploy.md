@@ -49,51 +49,29 @@ docker compose exec -T api python3 manage.py install_app --activate --quiet http
 > - 必须带上 `docker-compose.prod.yml`：它加载 `settings_fork.py` 去掉旧 Dummy 插件，漏掉的话旧 Dummy
 >   会在每个渠道默认启用，顾客不付钱就能下单并标记为已支付。
 
-## 5. 创建商品类型
+## 5. 初始化
 
-创建两个不需要配送的商品类型 `Non Shippable` 和 `Service`（`isShippingRequired: false`，结账时不要求收货地址和配送方式）。
-在 Playground 里执行：
-
-```graphql
-mutation CreateNonShippingProductTypes {
-  nonShippable: productTypeCreate(
-    input: { name: "Non Shippable", kind: NORMAL, isShippingRequired: false }
-  ) {
-    productType { id name slug isShippingRequired }
-    errors { field code message }
-  }
-  service: productTypeCreate(
-    input: { name: "Service", kind: NORMAL, isShippingRequired: false }
-  ) {
-    productType { id name slug isShippingRequired }
-    errors { field code message }
-  }
-}
-```
-
-## 6. 配置 OpenID Connect
-
-见 [配置 OpenID Connect 插件](oidc-setup.md)。
-
-## 7. 接入 EOS
-
-见 [EOS 接入初始化](eos-setup.md)。
-
-## 8. 接入 storefront
-
-不需要配送的结账（第 5 步的商品类型）不收地址，storefront 用渠道的默认国家生成账单地址。`channel.defaultCountry`
-只对 App 和员工可见，所以 storefront 需要一个 App 令牌；没有它，这类订单会报“无法为此订单确定账单国家”。
-
-App 不需要任何权限：
+Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.sh` 把 `saleor-dashboard` client 的 secret 写进本仓库的
+`.env`（`SALEOR_DASHBOARD_CLIENT_SECRET`）。服务启动后执行：
 
 ```bash
-docker compose exec -T api python3 manage.py create_app --activate Storefront
+./provision-eos.sh
 ```
 
-输出里的 `auth_token` **只在这次出现一次**。写进 storefront 仓库的 `.env.local`，然后重启 storefront：
+它把 [`graphql/`](../../graphql) 里的 mutation 发给 Saleor，依次：
 
-```
-SALEOR_APP_TOKEN=<auth_token>
-```
+- 创建不需要配送的商品类型 `Non Shippable` 和 `Service`，结账时不要求收货地址和配送方式；
+- 配置 OpenID Connect 插件，见 [配置 OpenID Connect 插件](oidc-setup.md)；
+- 创建 EOS App 和它的订单 webhook，见 [EOS 接入](eos-setup.md)，令牌写进 `../eos/.env` 的 `EOS_SALEOR_APPTOKEN`；
+- 创建 Storefront App，令牌写进 `../storefront/.env` 的 `SALEOR_APP_TOKEN`。不需要配送的结账不收地址，storefront
+  用渠道的默认国家生成账单地址，而 `channel.defaultCountry` 只对 App 和员工可见；没有这个令牌，这类订单会报“无法为此订单确定账单国家”。
 
-> **生产环境**：`SALEOR_APP_TOKEN` 配在 storefront 的部署环境变量里。
+前两步需要的权限 EOS App 没有，由临时的 `EOS provisioning` App 执行，执行完就停用。令牌只在创建时出现一次，目标文件不存在时
+打印出来。执行完重启 EOS 和 storefront。只在全新的 Saleor 上执行一次：再执行会把这些都再建一遍。
+
+> **生产环境**（只需执行一次）：生产开启了出站 IP 过滤（`HTTP_IP_FILTER_ENABLED`），Saleor 不能访问内网地址，所以用环境变量覆盖默认值：
+>
+> - `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
+> - `KEYCLOAK_PUBLIC_URL` 和 `KEYCLOAK_URL_FOR_SALEOR` 都设为 Keycloak 对外地址，如 `https://<Keycloak 域名>`
+> - `EOS_ORDER_WEBHOOK_URL` 设为 `https://<EOS 域名>/api/webhooks/saleor/order`
+> - 打印出来的两个令牌分别配在 EOS（`EOS_SALEOR_APPTOKEN`）和 storefront（`SALEOR_APP_TOKEN`）的部署环境变量里

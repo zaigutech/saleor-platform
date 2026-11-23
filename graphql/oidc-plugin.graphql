@@ -1,0 +1,27 @@
+# Saleor's OpenID Connect plugin against Keycloak's `saleor-dashboard` client. Parameters: docs/operations/oidc-setup.md.
+mutation ConfigureOpenIdConnect(
+  $clientSecret: String!
+  $authorizationUrl: String!
+  $tokenUrl: String!
+  $jwksUrl: String!
+  $userInfoUrl: String!
+) {
+  pluginUpdate(
+    id: "mirumee.authentication.openidconnect"
+    input: {
+      active: true
+      configuration: [
+        { name: "client_id", value: "saleor-dashboard" }
+        { name: "client_secret", value: $clientSecret }
+        { name: "oauth_authorization_url", value: $authorizationUrl }
+        { name: "oauth_token_url", value: $tokenUrl }
+        { name: "json_web_key_set_url", value: $jwksUrl }
+        { name: "user_info_url", value: $userInfoUrl }
+        { name: "use_oauth_scope_permissions", value: "true" }
+        { name: "oauth_logout_url", value: "" }
+      ]
+    }
+  ) {
+    errors { field code message }
+  }
+}

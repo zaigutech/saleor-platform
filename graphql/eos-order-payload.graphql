@@ -1,0 +1,24 @@
+# The payload EOS's order webhook receives: EOS's contract with Saleor. Keep the channel inside `order`, unaliased,
+# or EOS rejects every webhook as malformed.
+subscription {
+  event {
+    __typename
+    ... on OrderPaid {
+      order { ...EosOrder }
+    }
+  }
+}
+
+fragment EosOrder on Order {
+  id
+  created
+  channel { id }
+  user { id }
+  lines {
+    variant { sku }
+    quantity
+    unitPrice { net { amount currency } }
+  }
+  total { gross { amount currency } }
+  transactions { id pspReference }
+}
