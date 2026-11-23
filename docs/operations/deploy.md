@@ -37,21 +37,10 @@ docker compose up
 `dummy-payment-app`（随 `docker compose up` 启动，所有支付直接返回成功）。旧 Payments API 的 Dummy
 插件已由 [`saleor-settings/settings_fork.py`](../../saleor-settings/settings_fork.py) 去掉，不用处理。
 
-用超级管理员登录 Dashboard，在 Playground 里执行。
+服务启动后安装并启用它，权限（`HANDLE_PAYMENTS`）取自它的 manifest：
 
-```graphql
-mutation InstallDummyPaymentApp {
-  appInstall(
-    input: {
-      appName: "Dummy Payment App"
-      manifestUrl: "http://dummy-payment-app.local:3000/api/manifest"
-      permissions: [HANDLE_PAYMENTS]
-    }
-  ) {
-    appInstallation { id status message }
-    errors { field code message }
-  }
-}
+```bash
+docker compose exec -T api python3 manage.py install_app --activate --quiet http://dummy-payment-app.local:3000/api/manifest
 ```
 
 > **生产环境**：
