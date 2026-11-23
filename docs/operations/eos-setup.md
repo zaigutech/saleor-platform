@@ -1,47 +1,27 @@
 # EOS 接入初始化
 
-用超级管理员登录 Dashboard，在 Playground 里执行。
-
 ## 1. 创建 EOS App
 
-```graphql
-mutation CreateEosApp {
-  appCreate(
-    input: {
-      name: "EOS"
-      permissions: [
-        MANAGE_ORDERS
-        MANAGE_PRODUCTS
-        MANAGE_USERS
-        MANAGE_STAFF
-        MANAGE_CHECKOUTS
-        MANAGE_CHANNELS
-      ]
-    }
-  ) {
-    authToken
-    app {
-      id
-      name
-    }
-    errors {
-      field
-      message
-    }
-  }
-}
+```bash
+docker compose exec -T api python3 manage.py create_app --activate \
+  --permission MANAGE_ORDERS --permission MANAGE_PRODUCTS --permission MANAGE_USERS \
+  --permission MANAGE_STAFF --permission MANAGE_CHECKOUTS --permission MANAGE_CHANNELS \
+  EOS
 ```
-
-返回里 `errors` 为空才算成功。
 
 `MANAGE_STAFF` 让 EOS 找到在商城购物的员工账户（如超级管理员）；Saleor 只对它显示员工。
 
-- `authToken`：**只在这次返回里出现一次**，之后查不到，立刻交给 EOS 配置。
-- `app.id`：`QXBwOjI=`复制下来，第 2 步的 `appId` 就填它。
+输出里的 `auth_token` **只在这次出现一次**，之后查不到，立刻交给 EOS 配置。
+
+App 的 ID（如 `QXBwOjI=`）第 2 步要用，从 `app_list` 输出里 `"name": "EOS"` 那行的 `id` 取：
+
+```bash
+docker compose exec -T api python3 manage.py app_list
+```
 
 ## 2. 创建订单 webhook
 
-把下面的 mutation 粘进 Playground，Variables 面板粘贴下面的值（除 `appId` 外已按本地开发环境填好）：
+Saleor 没有创建 webhook 的命令。用超级管理员登录 Dashboard，把下面的 mutation 粘进 Playground，Variables 面板粘贴下面的值（除 `appId` 外已按本地开发环境填好）：
 
 ```json
 {
@@ -53,7 +33,7 @@ mutation CreateEosApp {
 
 | 参数 | 含义 |
 |---|---|
-| `appId` | 第 1 步返回的 `app.id`，每次创建都不同 |
+| `appId` | 第 1 步 `app_list` 里 EOS 的 `id`，每次创建都不同 |
 | `targetUrl` | 从 Saleor api/worker 容器访问 EOS 的地址。本地是 `zaigu_network` 网关 `172.20.0.1` 上的 EOS 8080 端口 |
 | `query` | EOS 收到的 payload 契约（subscription），见下方说明 |
 
