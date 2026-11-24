@@ -75,3 +75,44 @@ Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.
 > - `KEYCLOAK_PUBLIC_URL` 和 `KEYCLOAK_URL_FOR_SALEOR` 都设为 Keycloak 对外地址，如 `https://<Keycloak 域名>`
 > - `EOS_ORDER_WEBHOOK_URL` 设为 `https://<EOS 域名>/api/webhooks/saleor/order`
 > - 打印出来的 EOS App 令牌配在 EOS 的部署环境变量 `EOS_SALEOR_APPTOKEN` 里；生产不设 `STOREFRONT_ENV_FILE`，不创建 Storefront App
+
+## 6. 对外提供 API（生产）
+
+eweb 的商城是静态页面：构建时从这里读商品目录，访客的浏览器再直接调用它查库存和购物车，所以 API 对公网开放在
+`https://commerce.zaigu.com`。匿名请求只能读已发布的商品、渠道里的价格和库存、做结账；写操作、订单、顾客和后台数据都要员工或
+App 的令牌。`docker-compose.prod.yml` 为此：
+
+- 关掉 Saleor 默认开着的 `DEBUG`（否则出错时把调用栈返回给客户端），关掉 GraphQL Playground；
+- 把 `PUBLIC_URL` 设为这个地址，商品图片和缩略图的链接都指向它；
+- API 的 8000 端口只绑定服务器本机，公网请求只能经过 caddy。
+
+caddy 在 `zaigu_network` 上为 `commerce.zaigu.com` 终止 TLS，只对公网开放商城要用的三类路径，其余一律 404：
+
+- `/graphql/`：反代到 `saleor-api:8000`，并按客户端 IP 限流（Saleor 只限制单个查询的成本，不限频率；标准 caddy 没有限流，
+  需要带 `caddy-ratelimit` 模块的构建）；
+- `/thumbnail/*`：反代到 `saleor-api:8000`，它生成缩略图后重定向到 `/media/`；
+- `/media/*`：由 caddy 直接读媒体目录 `/mnt/data/saleor`（挂进 caddy 容器；`DEBUG` 关掉后 Saleor 不再提供这些文件）。
+
+```caddyfile
+commerce.zaigu.com {
+	@api path /graphql/ /thumbnail/*
+	handle @api {
+		rate_limit {
+			zone graphql {
+				key {remote_host}
+				events 300
+				window 1m
+			}
+		}
+		reverse_proxy saleor-api:8000
+	}
+	handle_path /media/* {
+		root * /mnt/data/saleor
+		file_server
+	}
+	respond 404
+}
+```
+
+租户的商城用自己的域名时，把它加进 `ALLOWED_CLIENT_HOSTS`（账户邮件里允许跳转回的域名）。跨域不做限制
+（`ALLOWED_GRAPHQL_ORIGINS` 保持 `*`）：API 本就公开，登录态放在请求头的令牌里而不是 cookie，限制来源挡不住任何人。
