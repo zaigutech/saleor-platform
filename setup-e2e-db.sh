@@ -25,4 +25,4 @@ psql $FULL_DB_URL -c 'CREATE EXTENSION IF NOT EXISTS btree_gin; CREATE EXTENSION
 psql $FULL_DB_URL -f $SNAPSHOT
 
 # make sure to run migrations in case snapshot is not up to date with `core` migrations
-docker compose exec api python manage.py migrate
+docker compose exec saleor-api python manage.py migrate

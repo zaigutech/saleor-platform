@@ -7,7 +7,7 @@
 # API 对公网的地址是 https://commerce.zaigu.com，由 caddy 反代（见 docs/operations/deploy.md 的「对外提供 API」）；
 # 8000 端口只绑定服务器本机，公网请求只能经过 caddy。
 
-# api 和 worker 共用：worker 也生成媒体地址（webhook 负载）和账户邮件里的链接，加载同一份 settings。
+# saleor-api 和 saleor-worker 共用：saleor-worker 也生成媒体地址（webhook 负载）和账户邮件里的链接，加载同一份 settings。
 x-production-env: &production-env
   DJANGO_SETTINGS_MODULE: saleor.settings_fork
   # Saleor 默认 DEBUG=True：出错时把调用栈返回给客户端，并由 Django 自己提供 /media/。
@@ -18,17 +18,17 @@ x-production-env: &production-env
   PLAYGROUND_ENABLED: "False"
 
 services:
-  api:
+  saleor-api:
     ports: !override
       - 127.0.0.1:8000:8000
     environment:
       <<: *production-env
-      # api 是同一网络里的容器（如 eos）用的服务名，localhost 是服务器本机（如 provision-eos.sh）。
-      ALLOWED_HOSTS: commerce.zaigu.com,api,localhost,127.0.0.1
+      # saleor-api 是同一网络里的容器（如 eos）用的服务名，localhost 是服务器本机（如 provision-eos.sh）。
+      ALLOWED_HOSTS: commerce.zaigu.com,saleor-api,localhost,127.0.0.1
     volumes:
       - ./saleor-settings/settings_fork.py:/app/saleor/settings_fork.py:ro
 
-  worker:
+  saleor-worker:
     environment:
       <<: *production-env
     volumes:

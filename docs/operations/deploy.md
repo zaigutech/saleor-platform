@@ -3,13 +3,13 @@
 ## 1. 迁移数据库(middleware目录下执行)
 
 ```bash
-docker compose run --rm api python3 manage.py migrate
+docker compose run --rm saleor-api python3 manage.py migrate
 ```
 
 ## 2. 创建超级管理员
 
 ```bash
-docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin api python3 manage.py createsuperuser --noinput --email admin@example.com
+docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin saleor-api python3 manage.py createsuperuser --noinput --email admin@example.com
 
 ```
 
@@ -40,7 +40,7 @@ docker compose up
 服务启动后安装并启用它，权限（`HANDLE_PAYMENTS`）取自它的 manifest：
 
 ```bash
-docker compose exec -T api python3 manage.py install_app --activate --quiet http://dummy-payment-app.local:3000/api/manifest
+docker compose exec -T saleor-api python3 manage.py install_app --activate --quiet http://dummy-payment-app.local:3000/api/manifest
 ```
 
 > **生产环境**：
@@ -88,9 +88,9 @@ App 的令牌。`docker-compose.prod.yml` 为此：
 
 caddy 在 `zaigu_network` 上为 `commerce.zaigu.com` 终止 TLS，只对公网开放商城要用的三类路径，其余一律 404：
 
-- `/graphql/`：反代到 `api:8000`，并按客户端 IP 限流（Saleor 只限制单个查询的成本，不限频率；标准 caddy 没有限流，
+- `/graphql/`：反代到 `saleor-api:8000`，并按客户端 IP 限流（Saleor 只限制单个查询的成本，不限频率；标准 caddy 没有限流，
   需要带 `caddy-ratelimit` 模块的构建）；
-- `/thumbnail/*`：反代到 `api:8000`，它生成缩略图后重定向到 `/media/`；
+- `/thumbnail/*`：反代到 `saleor-api:8000`，它生成缩略图后重定向到 `/media/`；
 - `/media/*`：由 caddy 直接读媒体目录 `/mnt/data/saleor`（挂进 caddy 容器；`DEBUG` 关掉后 Saleor 不再提供这些文件）。
 
 ```caddyfile
@@ -104,7 +104,7 @@ commerce.zaigu.com {
 				window 1m
 			}
 		}
-		reverse_proxy api:8000
+		reverse_proxy saleor-api:8000
 	}
 	handle_path /media/* {
 		root * /mnt/data/saleor

@@ -26,7 +26,7 @@ EOS_ENV_FILE="${EOS_ENV_FILE:-../eos/.env}"
 STOREFRONT_ENV_FILE="${STOREFRONT_ENV_FILE:-}"
 PROVISIONING_APP="EOS provisioning"
 
-manage() { docker compose exec -T api python3 manage.py "$@"; }
+manage() { docker compose exec -T saleor-api python3 manage.py "$@"; }
 # create_app NAME [PERMISSION...]: creates an active App and prints its token, which Saleor shows only this once.
 create_app() {
   local name=$1; shift
