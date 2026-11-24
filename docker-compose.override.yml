@@ -5,7 +5,7 @@
 #       带 -f 时 Compose 不会自动加载本文件，确保生产不受影响。
 # DJANGO_SETTINGS_MODULE 和 settings_fork.py 挂载在 docker-compose.prod.yml 里有同样一份，改动时两边同步。
 services:
-  api:
+  saleor-api:
     environment:
       # 仅开发环境关闭 Saleor 的出站 IP 过滤，
       # 使其可以访问私有 docker 网络中的 dummy-payment-app
@@ -25,7 +25,7 @@ services:
       timeout: 5s
       retries: 3
 
-  worker:
+  saleor-worker:
     environment:
       HTTP_IP_FILTER_ENABLED: "False"
       DJANGO_SETTINGS_MODULE: saleor.settings_fork

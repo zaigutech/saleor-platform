@@ -3,13 +3,13 @@
 ## 1. 迁移数据库(middleware目录下执行)
 
 ```bash
-docker compose run --rm api python3 manage.py migrate
+docker compose run --rm saleor-api python3 manage.py migrate
 ```
 
 ## 2. 创建超级管理员
 
 ```bash
-docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin api python3 manage.py createsuperuser --noinput --email admin@example.com
+docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin saleor-api python3 manage.py createsuperuser --noinput --email admin@example.com
 
 ```
 
@@ -40,7 +40,7 @@ docker compose up
 服务启动后安装并启用它，权限（`HANDLE_PAYMENTS`）取自它的 manifest：
 
 ```bash
-docker compose exec -T api python3 manage.py install_app --activate --quiet http://dummy-payment-app.local:3000/api/manifest
+docker compose exec -T saleor-api python3 manage.py install_app --activate --quiet http://dummy-payment-app.local:3000/api/manifest
 ```
 
 > **生产环境**：

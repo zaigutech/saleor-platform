@@ -4,13 +4,13 @@
 #       显式指定 -f 时 Compose 不会加载开发专用的 docker-compose.override.yml。
 # 下面的 settings 覆盖在 docker-compose.override.yml 里有同样一份，改动时两边同步。
 services:
-  api:
+  saleor-api:
     environment:
       DJANGO_SETTINGS_MODULE: saleor.settings_fork
     volumes:
       - ./saleor-settings/settings_fork.py:/app/saleor/settings_fork.py:ro
 
-  worker:
+  saleor-worker:
     environment:
       DJANGO_SETTINGS_MODULE: saleor.settings_fork
     volumes:

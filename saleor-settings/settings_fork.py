@@ -1,6 +1,6 @@
 # fork 的 Saleor settings 覆盖，开发和生产都加载。
 #
-# 挂载到 api / worker 容器的 /app/saleor/settings_fork.py，并设置
+# 挂载到 saleor-api / saleor-worker 容器的 /app/saleor/settings_fork.py，并设置
 # DJANGO_SETTINGS_MODULE=saleor.settings_fork（见 docker-compose.override.yml 和
 # docker-compose.prod.yml）。
 from saleor.settings import *  # noqa: F403

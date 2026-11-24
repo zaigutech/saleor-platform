@@ -69,12 +69,12 @@ cd saleor-platform
 
 3. Apply Django migrations:
 ```shell
-docker compose run --rm api python3 manage.py migrate
+docker compose run --rm saleor-api python3 manage.py migrate
 ```
 
 4. Populate the database with example data and create the admin user:
 ```shell
-docker compose run --rm api python3 manage.py populatedb --createsuperuser
+docker compose run --rm saleor-api python3 manage.py populatedb --createsuperuser
 ```
 *Note that `--createsuperuser` argument creates an admin account for `admin@example.com` with the password set to `admin`.*
 
@@ -159,7 +159,7 @@ docker compose down --volumes db
 </details>
    
 ## How to run application parts?
-  - `docker compose up api worker` for backend services only
+  - `docker compose up saleor-api saleor-worker` for backend services only
   - `docker compose up` for backend and frontend services
 
 ## Feedback

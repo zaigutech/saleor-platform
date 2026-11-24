@@ -1,5 +1,5 @@
 services:
-  api:
+  saleor-api:
     image: ghcr.nju.edu.cn/saleor/saleor:3.23
     ports:
       - 8000:8000
@@ -7,7 +7,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      # shared volume between worker and api for media
+      # shared volume between saleor-worker and saleor-api for media
       - /mnt/data/saleor:/app/media
     env_file:
       - common.env
@@ -15,15 +15,15 @@ services:
       - jwt.env
     environment:
       - DASHBOARD_URL=http://localhost:9000/
-      - ALLOWED_HOSTS=localhost,127.0.0.1,api
+      - ALLOWED_HOSTS=localhost,127.0.0.1,saleor-api
 
-  dashboard:
+  saleor-dashboard:
     image: ghcr.nju.edu.cn/saleor/saleor-dashboard:3.23
     ports:
       - 9000:80
     restart: unless-stopped
 
-  worker:
+  saleor-worker:
     image: ghcr.nju.edu.cn/saleor/saleor:3.23
     command: celery -A saleor --app=saleor.celeryconf:app worker --loglevel=info -B
     restart: unless-stopped
@@ -32,7 +32,7 @@ services:
       - backend.env
       - jwt.env
     volumes:
-      # shared volume between worker and api for media
+      # shared volume between saleor-worker and saleor-api for media
       - /mnt/data/saleor:/app/media
 
 networks:
