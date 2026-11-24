@@ -86,33 +86,15 @@ App 的令牌。`docker-compose.prod.yml` 为此：
 - 把 `PUBLIC_URL` 设为这个地址，商品图片和缩略图的链接都指向它；
 - API 的 8000 端口只绑定服务器本机，公网请求只能经过 caddy。
 
-caddy 在 `zaigu_network` 上为 `commerce.zaigu.com` 终止 TLS，只对公网开放商城要用的三类路径，其余一律 404：
+caddy 仓库的 `srv_commerce` 在 `zaigu_network` 上为 `commerce.zaigu.com` 终止 TLS，只对公网开放这些路径，其余一律 404：
 
-- `/graphql/`：反代到 `saleor-api:8000`，并按客户端 IP 限流（Saleor 只限制单个查询的成本，不限频率；标准 caddy 没有限流，
-  需要带 `caddy-ratelimit` 模块的构建）；
+- `/graphql/`：反代到 `saleor-api:8000`；
 - `/thumbnail/*`：反代到 `saleor-api:8000`，它生成缩略图后重定向到 `/media/`；
-- `/media/*`：由 caddy 直接读媒体目录 `/mnt/data/saleor`（挂进 caddy 容器；`DEBUG` 关掉后 Saleor 不再提供这些文件）。
+- `/.well-known/jwks.json`：反代到 `saleor-api:8000`，Saleor 的公钥，外部的支付 App 用它校验 webhook 签名；
+- `/media/*`：由 caddy 直接读媒体目录 `/mnt/data/saleor`（只读挂进 caddy 容器；`DEBUG` 关掉后 Saleor 不再提供这些文件）。
 
-```caddyfile
-commerce.zaigu.com {
-	@api path /graphql/ /thumbnail/*
-	handle @api {
-		rate_limit {
-			zone graphql {
-				key {remote_host}
-				events 300
-				window 1m
-			}
-		}
-		reverse_proxy saleor-api:8000
-	}
-	handle_path /media/* {
-		root * /mnt/data/saleor
-		file_server
-	}
-	respond 404
-}
-```
+暂不限流：Saleor 只限制单个查询的成本（50000），不限请求频率；流量起来后在 caddy 里按客户端 IP 限流（需要带
+`caddy-ratelimit` 模块的构建）。
 
 租户的商城用自己的域名时，把它加进 `ALLOWED_CLIENT_HOSTS`（账户邮件里允许跳转回的域名）。跨域不做限制
 （`ALLOWED_GRAPHQL_ORIGINS` 保持 `*`）：API 本就公开，登录态放在请求头的令牌里而不是 cookie，限制来源挡不住任何人。
