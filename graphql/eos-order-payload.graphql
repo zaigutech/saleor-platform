@@ -17,8 +17,9 @@ fragment EosOrder on Order {
   lines {
     variant { sku }
     quantity
-    unitPrice { net { amount currency } }
+    unitPrice { net { amount currency } gross { amount currency } }
   }
+  shippingPrice { gross { amount currency } }
   total { gross { amount currency } }
   transactions { id pspReference }
 }
