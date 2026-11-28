@@ -1,7 +1,11 @@
-# The category of EOS's service products. EOS expects it right after Saleor's "Default Category": Category:2 (EOS's
-# eos.saleor.category-service setting).
-mutation CreateServiceCategory {
-  categoryCreate(input: { name: "Services" }) {
+# Saleor owns storefront merchandising: the shop reads categories by slug and builds a page for each. EOS creates
+# services in Category:2 (EOS's eos.saleor.category-service setting) and packages in ServicePackages (Category:3,
+# eos.saleor.category-service-package); everything else is maintained in Saleor.
+mutation CreateEosCategories {
+  services: categoryCreate(input: { name: "Services" }) {
+    errors { field code message }
+  }
+  servicePackages: categoryCreate(input: { name: "ServicePackages" }) {
     errors { field code message }
   }
 }
