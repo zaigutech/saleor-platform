@@ -1,7 +1,7 @@
 # 配置 OpenID Connect 插件
 
 让 Saleor 认 Keycloak（realm `eos`）签发的 token，并让 Dashboard 经 Keycloak 登录：整个平台的超级管理员是
-Keycloak 里的同一个用户，用同一套邮箱和密码登录 EOS、Saleor Dashboard 和 Odoo。Keycloak 的 client 由 keycloak
+Keycloak 里的同一个用户，用同一个账号和密码登录 EOS、Saleor Dashboard 和 Odoo。Keycloak 的 client 由 keycloak
 仓库的 `provision-eos.sh` 创建。本仓库的 [`provision-eos.sh`](../../provision-eos.sh) 用
 [`graphql/oidc-plugin.graphql`](../../graphql/oidc-plugin.graphql) 配置插件，之后 Dashboard 登录页出现“Continue with SSO”。
 
