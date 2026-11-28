@@ -27,7 +27,7 @@ docker compose up
 > - 所有 `docker compose` 命令都加 `-f docker-compose.yml -f docker-compose.prod.yml`（如
 >   `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`），不加载开发专用的
 >   `docker-compose.override.yml`。
-> - `--email` 用平台超级管理员的邮箱，即 keycloak 仓库 `provision-eos.sh` 的 `EOS_ADMIN_USERNAME`；
+> - `--email` 用平台超级管理员的邮箱，即 keycloak 仓库 `.env` 的 `EOS_ADMIN_EMAIL`；
 >   `DJANGO_SUPERUSER_PASSWORD` 只在配置 OpenID Connect 之前用，换成强密码。配置之后它经 Keycloak 登录，见
 >   [配置 OpenID Connect 插件](oidc-setup.md)。
 
