@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Saleor provisioning for EOS: the non-shippable product types, the OpenID Connect plugin and the EOS App with its order
-# webhook, plus the Storefront App when STOREFRONT_ENV_FILE is set; only eos's dev-env sets it, since the storefront
-# runs only in local development, as a reference for eweb's shop. Run once, against a fresh Saleor with its services
-# up; a second run creates them all again. Deployment: docs/operations/deploy.md.
+# Saleor provisioning for EOS: the non-shippable product types, the Services category, the OpenID Connect plugin and
+# the EOS App with its order webhook, plus the Storefront App when STOREFRONT_ENV_FILE is set; only eos's dev-env sets
+# it, since the storefront runs only in local development, as a reference for eweb's shop. Run once, against a fresh
+# Saleor with its services up; a second run creates them all again. Deployment: docs/operations/deploy.md.
 # Needs SALEOR_DASHBOARD_CLIENT_SECRET, which the keycloak repository's provision-eos.sh writes into .env; the
 # environment overrides .env. In production also set COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml.
 set -euo pipefail
@@ -53,11 +53,14 @@ path.write_text("\n".join(lines) + "\n")' "$1" "$2" "$3"
   echo "    $4 written to $1 as $2"
 }
 
-echo "==> Creating the '$PROVISIONING_APP' App, which sends the next two mutations and is then deactivated"
-PROVISIONING_TOKEN=$(create_app "$PROVISIONING_APP" MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES MANAGE_PLUGINS)
+echo "==> Creating the '$PROVISIONING_APP' App, which sends the next three mutations and is then deactivated"
+PROVISIONING_TOKEN=$(create_app "$PROVISIONING_APP" MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES MANAGE_PRODUCTS MANAGE_PLUGINS)
 
 echo "==> Creating the product types Non Shippable and Service"
 graphql "$PROVISIONING_TOKEN" product-types.graphql
+
+echo "==> Creating the category Services"
+graphql "$PROVISIONING_TOKEN" categories.graphql
 
 echo "==> Configuring the OpenID Connect plugin"
 OIDC_URL="$KEYCLOAK_URL_FOR_SALEOR/realms/$KEYCLOAK_REALM/protocol/openid-connect"
