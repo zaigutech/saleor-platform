@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Saleor provisioning for EOS: the non-shippable product types, the Services category, the OpenID Connect plugin and
-# the EOS App with its order webhook, plus the Storefront App when STOREFRONT_ENV_FILE is set; only eos's dev-env sets
-# it, since the storefront runs only in local development, as a reference for eweb's shop. Run once, against a fresh
-# Saleor with its services up; a second run creates them all again. Deployment: docs/operations/deploy.md.
+# Saleor provisioning for EOS: the non-shippable product types, the Services and ServicePackages categories, whose ids
+# go to EOS, the OpenID Connect plugin and the EOS App with its order webhook, plus the Storefront App when
+# STOREFRONT_ENV_FILE is set; only eos's dev-env sets it, since the storefront runs only in local development, as a
+# reference for eweb's shop. Run once, against a fresh Saleor with its services up; a second run creates them all again.
+# Deployment: docs/operations/deploy.md.
 # Needs SALEOR_DASHBOARD_CLIENT_SECRET, which the keycloak repository's provision-eos.sh writes into .env; the
 # environment overrides .env. In production also set COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml.
 set -euo pipefail
@@ -33,12 +34,12 @@ create_app() {
   manage create_app --activate "${@/#/--permission=}" "$name" | tail -n 1 | jq -r .auth_token
 }
 # graphql TOKEN FILE [JQ_ARG...]: sends graphql/FILE with the JQ_ARGs (--arg NAME VALUE, --rawfile NAME PATH) as its
-# variables, and fails on any error, top-level or in a mutation's `errors`.
+# variables and prints the response's `data`; fails on any error, top-level or in a mutation's `errors`.
 graphql() {
   local token=$1 file=$2; shift 2
   jq -n --rawfile operation "graphql/$file" "$@" '{query: $operation, variables: ($ARGS.named | del(.operation))}' \
     | curl -sS --fail-with-body -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d @- "$SALEOR_API_URL" \
-    | jq '[.errors[]?, (.data[]? | .errors[]?)] | if . == [] then empty else halt_error end'
+    | jq -c '[.errors[]?, (.data[]? | .errors[]?)] as $errors | if $errors == [] then .data else $errors | halt_error end'
 }
 # hand_over FILE KEY VALUE LABEL: sets KEY=VALUE in FILE (its KEY line, else a new line) or, without FILE, prints VALUE.
 hand_over() {
@@ -57,16 +58,19 @@ echo "==> Creating the '$PROVISIONING_APP' App, which sends the next three mutat
 PROVISIONING_TOKEN=$(create_app "$PROVISIONING_APP" MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES MANAGE_PRODUCTS MANAGE_PLUGINS)
 
 echo "==> Creating the product types Non Shippable and Service"
-graphql "$PROVISIONING_TOKEN" product-types.graphql
+graphql "$PROVISIONING_TOKEN" product-types.graphql > /dev/null
 
 echo "==> Creating the categories Services and ServicePackages"
-graphql "$PROVISIONING_TOKEN" categories.graphql
+CATEGORIES=$(graphql "$PROVISIONING_TOKEN" categories.graphql)
+hand_over "$EOS_ENV_FILE" EOS_SALEOR_CATEGORYSERVICE "$(jq -r .services.category.id <<<"$CATEGORIES")" "Services category id"
+hand_over "$EOS_ENV_FILE" EOS_SALEOR_CATEGORYSERVICEPACKAGE "$(jq -r .servicePackages.category.id <<<"$CATEGORIES")" \
+  "ServicePackages category id"
 
 echo "==> Configuring the OpenID Connect plugin"
 OIDC_URL="$KEYCLOAK_URL_FOR_SALEOR/realms/$KEYCLOAK_REALM/protocol/openid-connect"
 graphql "$PROVISIONING_TOKEN" oidc-plugin.graphql --arg clientSecret "$DASHBOARD_CLIENT_SECRET" \
   --arg authorizationUrl "$KEYCLOAK_PUBLIC_URL/realms/$KEYCLOAK_REALM/protocol/openid-connect/auth" \
-  --arg tokenUrl "$OIDC_URL/token" --arg jwksUrl "$OIDC_URL/certs" --arg userInfoUrl "$OIDC_URL/userinfo"
+  --arg tokenUrl "$OIDC_URL/token" --arg jwksUrl "$OIDC_URL/certs" --arg userInfoUrl "$OIDC_URL/userinfo" > /dev/null
 
 echo "==> Deactivating the '$PROVISIONING_APP' App"
 for id in $(manage app_list | jq -r --arg name "$PROVISIONING_APP" 'select(.kind == "app" and .name == $name) | .id'); do
@@ -77,7 +81,7 @@ echo "==> Creating the EOS App and its order webhook"
 # MANAGE_STAFF lets EOS find staff accounts that shop, such as the super admin: Saleor shows staff only to it.
 EOS_TOKEN=$(create_app EOS MANAGE_ORDERS MANAGE_PRODUCTS MANAGE_USERS MANAGE_STAFF MANAGE_CHECKOUTS MANAGE_CHANNELS)
 graphql "$EOS_TOKEN" eos-order-webhook.graphql --arg targetUrl "$EOS_ORDER_WEBHOOK_URL" \
-  --rawfile query graphql/eos-order-payload.graphql
+  --rawfile query graphql/eos-order-payload.graphql > /dev/null
 hand_over "$EOS_ENV_FILE" EOS_SALEOR_APPTOKEN "$EOS_TOKEN" "EOS App token"
 
 if [ -n "$STOREFRONT_ENV_FILE" ]; then
@@ -88,4 +92,4 @@ if [ -n "$STOREFRONT_ENV_FILE" ]; then
   hand_over "$STOREFRONT_ENV_FILE" SALEOR_APP_TOKEN "$STOREFRONT_TOKEN" "Storefront App token"
 fi
 
-echo "==> Done. Restart EOS${STOREFRONT_ENV_FILE:+ and the storefront} to use the new tokens."
+echo "==> Done. Restart EOS${STOREFRONT_ENV_FILE:+ and the storefront} to use the new tokens and ids."

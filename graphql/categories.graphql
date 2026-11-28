@@ -1,11 +1,13 @@
-# Saleor owns storefront merchandising: the shop reads categories by slug and builds a page for each. EOS creates
-# services in Category:2 (EOS's eos.saleor.category-service setting) and packages in ServicePackages (Category:3,
-# eos.saleor.category-service-package); everything else is maintained in Saleor.
+# Saleor owns storefront merchandising: the shop reads categories by slug and builds a page for each. EOS files new
+# services in Services and new packages in ServicePackages; provision-eos.sh hands their ids to EOS. Everything else is
+# maintained in Saleor.
 mutation CreateEosCategories {
   services: categoryCreate(input: { name: "Services" }) {
+    category { id }
     errors { field code message }
   }
   servicePackages: categoryCreate(input: { name: "ServicePackages" }) {
+    category { id }
     errors { field code message }
   }
 }
