@@ -59,7 +59,7 @@ PROVISIONING_TOKEN=$(create_app "$PROVISIONING_APP" MANAGE_PRODUCT_TYPES_AND_ATT
 echo "==> Creating the product types Non Shippable and Service"
 graphql "$PROVISIONING_TOKEN" product-types.graphql
 
-echo "==> Creating the category Services"
+echo "==> Creating the categories Services and ServicePackages"
 graphql "$PROVISIONING_TOKEN" categories.graphql
 
 echo "==> Configuring the OpenID Connect plugin"

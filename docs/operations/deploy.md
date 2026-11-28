@@ -61,7 +61,7 @@ Keycloak 先按 keycloak 仓库的部署流程初始化：它的 `provision-eos.
 它把 [`graphql/`](../../graphql) 里的 mutation 发给 Saleor，依次：
 
 - 创建不需要配送的商品类型 `Non Shippable` 和 `Service`，结账时不要求收货地址和配送方式；
-- 创建 EOS 服务商品的分类 `Services`；
+- 创建 EOS 服务的分类 `Services` 和套餐的分类 `ServicePackages`，EOS 新建时分别归入两者，其余陈列信息由 Saleor 维护；
 - 配置 OpenID Connect 插件，见 [配置 OpenID Connect 插件](oidc-setup.md)；
 - 创建 EOS App 和它的订单 webhook，见 [EOS 接入](eos-setup.md)，令牌写进 `../eos/.env` 的 `EOS_SALEOR_APPTOKEN`；
 - 设了 `STOREFRONT_ENV_FILE` 时创建 Storefront App，令牌写进那个文件的 `SALEOR_APP_TOKEN`。storefront 只在本地开发中作为 eweb 商城的参考运行，不部署，只有 eos 的 dev-env 会设它。不需要配送的结账不收地址，storefront
